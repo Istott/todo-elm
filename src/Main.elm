@@ -1,25 +1,49 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, button, div, text)
-import Html.Events exposing (onClick)
+import Html exposing (..)
+import Html.Events exposing (..)
+import Html.Attributes exposing (..)
 
 main =
-  Browser.sandbox { init = 0, update = update, view = view }
+    Browser.sandbox { init = countState, update = update, view = view }
 
-type Msg = Increment | Decrement
+--model (this is where I store state)
 
-update msg model =
-  case msg of
-    Increment ->
-      model + 1
+type alias Model = 
+    Int
 
-    Decrement ->
-      model - 1
+countState : Model
+countState = 
+    0
 
-view model =
-  div []
-    [ button [ onClick Decrement ] [ text "-" ]
-    , div [] [ text (String.fromInt model) ]
-    , button [ onClick Increment ] [ text "+" ]
-    ]
+-- msg (this is my actions or my event triggers)
+
+type Msg
+    = Increment
+    | Decrement
+    | Reset
+
+-- update (this is my reducer, this is where I change/update state)
+
+update : Msg -> Model -> Model
+update msg modela =
+    case msg of
+        Increment ->
+            modela + 1
+        Decrement ->
+            modela - 1
+        Reset ->
+            modela - modela
+
+-- view (this is where I render the ui)
+
+view : Model -> Html Msg
+view modelo =
+    div []
+        [
+            button [ onClick Increment ] [ text "add 1" ]
+            , p [] [ text (String.fromInt modelo) ]
+            , button [ onClick Decrement ] [ text "subtract 2"]
+            , button [ onClick Reset ] [ text "reset" ]
+        ]
