@@ -1,98 +1,62 @@
 module Main exposing (main)
 
-import Browser
+import Browser exposing (Document)
 import Html exposing (..)
-import Html.Events exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import SmoothScroll exposing (scrollTo)
+import Task
+
 
 main =
-    Browser.sandbox { init = todoState, update = update, view = view }
+    Browser.document
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
 
---model (this is where I store state)
 
-type alias Todo = 
-    { text : String
-    , completed : Bool
-    }
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { foo = "bar" }, Cmd.none )
+
 
 type alias Model =
-    { todos : List Todo
-    , inputText : String
-    }
+    { foo : String }
 
-todoState : Model
-todoState =
-    { todos = []
-    , inputText = ""
-    }
-
--- msg (this is my actions or my event triggers)
 
 type Msg
-    = AddTodo
-    | RemoveTodo Int
-    | ToggleTodo Int
-    | ChangeInput String
-
--- update (this is my reducer, this is where I change/update state)
-
-update : Msg -> Model -> Model
-update message model
-    = case message of
-        AddTodo -> 
-            { model | todos = addToList model.inputText model.todos
-                , inputText = ""
-            }
-        RemoveTodo index -> 
-            { model | todos = removeFromList index model.todos }
-        ToggleTodo index ->
-            { model | todos = toggleAtIndex index model.todos }
-        ChangeInput input ->
-            { model | inputText = input }
-
-addToList : String -> List Todo -> List Todo
-addToList input todos =
-    todos ++ [{ text = input, completed = False }]
-
-removeFromList : Int -> List Todo -> List Todo
-removeFromList index list =
-    List.take index list ++ List.drop (index + 1) list
-
-toggleAtIndex : Int -> List Todo -> List Todo
-toggleAtIndex indexToToggle list =
-    List.indexedMap (\currentIndex todo -> 
-        if currentIndex == indexToToggle then 
-            { todo | completed = not todo.completed } 
-        else 
-            todo
-    ) list
+    = NoOp
+    | SmoothScroll String
 
 
--- view (this is where I render the ui)
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
 
-viewTodo : Int -> Todo -> Html Msg
-viewTodo index todo =
-    li
-        [ style "text-decoration"
-            (if todo.completed then
-                "line-through"
-             else
-                "none"
-            )
-        ]
-        [ text todo.text
-        , button [ type_ "button", onClick (ToggleTodo index) ] [ text "Toggle" ]
-        , button [ type_ "button", onClick (RemoveTodo index) ] [ text "Delete" ]
-        ]
+        SmoothScroll id ->
+            ( model, Task.attempt (always NoOp) (scrollTo id) )
 
 
-view : Model -> Html Msg
+view : Model -> Document Msg
 view model =
-    Html.form [ onSubmit AddTodo ]
-        [ h1 [] [ text "Todos in Elm" ]
-        , input [ value model.inputText, onInput ChangeInput, placeholder "What do you want to do?" ] []
-        , if List.isEmpty model.todos then
-            p [] [ text "The list is clean 🧘‍♀️" ]
-          else
-            ol [] (List.indexedMap viewTodo model.todos)
+    { title = "Foo"
+    , body =
+        [ div []
+            [ p
+                [ id "p-one"
+                , onClick (SmoothScroll "p-two")
+                ]
+                [ text "p one" ]
+            , p
+                [ id "p-two"
+                , style "margin-top" "2500px"
+                , onClick (SmoothScroll "p-one")
+                ]
+                [ text "p two" ]
+            ]
         ]
+    }
